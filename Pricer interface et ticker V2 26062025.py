@@ -111,7 +111,7 @@ def get_r():
     if r.status_code==200:
         soup = BeautifulSoup(r.text, "html.parser")
         texte = soup.get_text()
-        match = re.search(r"dernier prix:\s*([\d,]+)", texte)
+        match = re.search(r"Last price:\s*([\d,]+)", texte)
         if match:
             r = float(match.group(1).replace(",", "."))/100
             return r
@@ -127,7 +127,7 @@ def get_r_us():
     if r.status_code == 200:
         soup = BeautifulSoup(r.text, "html.parser")
         texte = soup.get_text()
-        match = re.search(r"Dernier prix:\s*([\d,]+)", texte, re.IGNORECASE)
+        match = re.search(r"Last Price:\s*([\d,]+)", texte, re.IGNORECASE)
         if not match:
             # Essaye autre format
             match = re.search(r"(\d+,\d+)\s*%", texte)
@@ -146,7 +146,7 @@ def get_r_ca():
     if r.status_code == 200:
         soup = BeautifulSoup(r.text, "html.parser")
         texte = soup.get_text()
-        match = re.search(r"Dernier prix:\s*([\d,]+)", texte, re.IGNORECASE)
+        match = re.search(r"Last price :\s*([\d,]+)", texte, re.IGNORECASE)
         if not match:
             # Essaye autre format
             match = re.search(r"(\d+,\d+)\s*%", texte)
@@ -250,18 +250,18 @@ ASSET_CATEGORIES = {
     ]
 }
 MONTH_CODES = [
-    ("Janvier", "F"),
-    ("Février", "G"),
-    ("Mars", "H"),
-    ("Avril", "J"),
-    ("Mai", "K"),
-    ("Juin", "M"),
-    ("Juillet", "N"),
-    ("Août", "Q"),
-    ("Septembre", "U"),
-    ("Octobre", "V"),
-    ("Novembre", "X"),
-    ("Décembre", "Z"),
+    ("January", "F"),
+    ("February", "G"),
+    ("March", "H"),
+    ("April", "J"),
+    ("May", "K"),
+    ("June", "M"),
+    ("July", "N"),
+    ("August", "Q"),
+    ("September", "U"),
+    ("October", "V"),
+    ("November", "X"),
+    ("December", "Z"),
 ]
 YEARS = [str(y) for y in range(2024, 2032)]
 
@@ -285,7 +285,7 @@ class OptionPricerApp(tk.Tk):
 
     def create_ticker_frame(self):
         self.clear_frame()
-        tk.Label(self, text="Sélectionnez la catégorie, l'actif, le mois et l'année :", font=('Arial', 14)).pack(pady=15)
+        tk.Label(self, text="Select the category, the asset, the month, and the year :", font=('Arial', 14)).pack(pady=15)
 
         # Catégorie
         self.category_var = tk.StringVar()
@@ -308,7 +308,7 @@ class OptionPricerApp(tk.Tk):
         self.year_var = tk.StringVar()
         ttk.Combobox(self, textvariable=self.year_var, values=YEARS, state="readonly", width=8).pack(pady=3)
     
-        tk.Button(self, text="Charger Skew & Spot", command=self.load_skew_spot_thread).pack(pady=15)
+        tk.Button(self, text="Load Skew & Spot", command=self.load_skew_spot_thread).pack(pady=15)
         self.status_label = tk.Label(self, text="", font=('Arial', 12), fg="blue")
         self.status_label.pack(pady=10)
 
@@ -336,13 +336,13 @@ class OptionPricerApp(tk.Tk):
         year_code = year[-1]
         ticker = f"{asset_code}{month_code}{year_code}".upper()
         try:
-            self.status_label.config(text="Récupération du skew de volatilité...")
+            self.status_label.config(text="Fetching the volatility skew...")
             self.update_idletasks()
             self.spot, self.df_otm = get_barchart_skew(ticker)
-            self.status_label.config(text="Interpolation de la volatilité en fonction du strike...")
+            self.status_label.config(text="Volatility interpolation across strikes...")
             self.update_idletasks()
             self.vol_interp = get_vol_interp_function(self.df_otm)
-            self.status_label.config(text="Récupération du taux sans risque...")
+            self.status_label.config(text="Fetching the risk-free rate...")
             self.update_idletasks()
             if "(CBOT)" in asset_name or "(ICE/US)" in asset_name or "(NYMEX)" in asset_name or "(CME)" in asset_name or "(MIAX)" in asset_name:
                 self.r = get_r_us()
@@ -353,27 +353,27 @@ class OptionPricerApp(tk.Tk):
             self.show_skew_plot()
         except Exception as e:
             self.status_label.config(text="")
-            messagebox.showerror("Erreur", f"Impossible de récupérer les données : {e}")
+            messagebox.showerror("Erreur", f"Unable to retrieve the data : {e}")
 
 
     def load_skew_spot(self):
         ticker = self.ticker_entry.get().strip().upper()
         if not ticker:
-            messagebox.showerror("Erreur", "Veuillez saisir un ticker valide.")
+            messagebox.showerror("Erreur", "Please enter a valid ticker.")
             return
         try:
        # Étape 1 : récupération du skew
-           self.status_label.config(text="Récupération du skew de volatilité...")
+           self.status_label.config(text="Fetching the volatility skew…")
            self.update_idletasks()
            self.spot, self.df_otm = get_barchart_skew(ticker)
 
        # Étape 2 : interpolation
-           self.status_label.config(text="Interpolation de la volatilité en fonction du strike...")
+           self.status_label.config(text="Volatility interpolation across strikes...")
            self.update_idletasks()
            self.vol_interp = get_vol_interp_function(self.df_otm)
 
        # Étape 3 : taux sans risque
-           self.status_label.config(text="Récupération du taux sans risque...")
+           self.status_label.config(text="Fetching the risk-free rate...")
            self.update_idletasks()
            self.r = get_r()
 
@@ -382,11 +382,11 @@ class OptionPricerApp(tk.Tk):
 
         except Exception as e:
            self.status_label.config(text="")
-           messagebox.showerror("Erreur", f"Impossible de récupérer les données : {e}")
+           messagebox.showerror("Erreur", f"Unable to retrieve the data : {e}")
 
     def show_skew_plot(self):
         self.clear_frame()
-        tk.Label(self, text=f"Spot détecté : {self.spot:.2f}", font=('Arial', 14)).pack(pady=5)
+        tk.Label(self, text=f"Spot : {self.spot:.2f}", font=('Arial', 14)).pack(pady=5)
         fig, ax = plt.subplots(figsize=(7, 4))
         x = self.df_otm['strikePrice'].values
         y = self.df_otm['optImpliedVolatility'].values
@@ -395,22 +395,22 @@ class OptionPricerApp(tk.Tk):
             spline = make_interp_spline(x, y, k=3)
             y_smooth = spline(x_smooth)
             ax.plot(x_smooth, y_smooth, label="Volatility Skew (OTM)", color='blue')
-        ax.plot(x, y, 'o', label='Volatilité implicite (%)', color='orange')
+        ax.plot(x, y, 'o', label='Implied Volatility (%)', color='orange')
         ax.axvline(self.spot, color='red', linestyle='--', label=f'Spot = {self.spot}')
         ax.set_xlabel('Strike')
-        ax.set_ylabel('Volatilité implicite (%)')
-        ax.set_title('Skew de volatilité')
+        ax.set_ylabel('Implied Volatility (%)')
+        ax.set_title('Volatility Skew')
         ax.grid(True)
         ax.legend()
         fig.tight_layout()
         canvas = FigureCanvasTkAgg(fig, master=self)
         canvas.get_tk_widget().pack()
         canvas.draw()
-        tk.Label(self, text=f"Taux sans risque utilisé : {self.r:.3%}", font=('Arial', 12)).pack(pady=5)
-        tk.Label(self, text="Combien de legs voulez-vous pricer ? (1, 2 ou 3)", font=('Arial', 12)).pack(pady=10)
+        tk.Label(self, text=f"Risk‑free rate used : {self.r:.3%}", font=('Arial', 12)).pack(pady=5)
+        tk.Label(self, text="How many legs do you want to price ? (1, 2 ou 3)", font=('Arial', 12)).pack(pady=10)
         self.nb_legs_var = tk.IntVar(value=1)
         ttk.Combobox(self, textvariable=self.nb_legs_var, values=[1,2,3], state="readonly", width=5).pack()
-        tk.Button(self, text="Continuer", command=self.create_legs_frame).pack(pady=15)
+        tk.Button(self, text="Continue", command=self.create_legs_frame).pack(pady=15)
 
     def create_legs_frame(self):
         self.nb_legs = self.nb_legs_var.get()
@@ -422,10 +422,10 @@ class OptionPricerApp(tk.Tk):
             tk.Label(frame, text=f"Strike :", width=14).grid(row=0, column=0, sticky="e")
             strike_entry = tk.Entry(frame)
             strike_entry.grid(row=0, column=1)
-            tk.Label(frame, text="Maturité (jours) :", width=14).grid(row=1, column=0, sticky="e")
+            tk.Label(frame, text="Maturity (days) :", width=14).grid(row=1, column=0, sticky="e")
             maturity_entry = tk.Entry(frame)
             maturity_entry.grid(row=1, column=1)
-            tk.Label(frame, text="Type d'option :", width=14).grid(row=2, column=0, sticky="e")
+            tk.Label(frame, text="Option type:", width=14).grid(row=2, column=0, sticky="e")
             type_var = tk.StringVar(value="call")
             ttk.Combobox(frame, textvariable=type_var, values=["call", "put"], state="readonly", width=8).grid(row=2, column=1)
             tk.Label(frame, text="Position :", width=14).grid(row=3, column=0, sticky="e")
@@ -437,7 +437,7 @@ class OptionPricerApp(tk.Tk):
                 "type": type_var,
                 "pos": pos_var
             })
-        tk.Button(self, text="Calculer le pricing", command=self.price_strategy_thread).pack(pady=20)
+        tk.Button(self, text="Compute the pricing", command=self.price_strategy_thread).pack(pady=20)
         self.result_text = tk.Text(self, height=12, font=('Consolas', 12))
         self.result_text.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -461,26 +461,26 @@ class OptionPricerApp(tk.Tk):
                 vega = calcul_vega(self.spot, K, T, self.r, sigma, n, option_type, position)
                 signe = 1 if position == "long" else -1
                 legs.append({
-                    "prix": price * signe,
+                    "price": price * signe,
                     "delta": delta,
                     "gamma": gamma,
                     "vega": vega,
                     "sigma": sigma
                 })
-            total_price = sum(leg["prix"] for leg in legs)
+            total_price = sum(leg["price"] for leg in legs)
             total_delta = sum(leg["delta"] for leg in legs)
             total_gamma = sum(leg["gamma"] for leg in legs)
             total_vega = sum(leg["vega"] for leg in legs)
             res = ""
             for i, leg in enumerate(legs):
-                res += f"--- Résultats pour la leg {i+1} (vol : {leg['sigma']:.2%}) ---\n"
-                res += f"Prix: {leg['prix']:.4f}\nDelta: {leg['delta']*100:.3f}%\nGamma: {leg['gamma']:.4f}\nVega: {leg['vega']:.4f}\n\n"
-            res += "--- Résultat global de la stratégie ---\n"
-            res += f"Prix total: {total_price:.4f}\nDelta total: {total_delta*100:.3f}%\nGamma total: {total_gamma:.4f}\nVega total: {total_vega:.4f}\n"
+                res += f"--- Result for the leg {i+1} (vol : {leg['sigma']:.2%}) ---\n"
+                res += f"Price: {leg['price']:.4f}\nDelta: {leg['delta']*100:.3f}%\nGamma: {leg['gamma']:.4f}\nVega: {leg['vega']:.4f}\n\n"
+            res += "--- Global strategy result ---\n"
+            res += f"Total price: {total_price:.4f}\nDelta total: {total_delta*100:.3f}%\nGamma total: {total_gamma:.4f}\nVega total: {total_vega:.4f}\n"
             self.result_text.delete(1.0, tk.END)
             self.result_text.insert(tk.END, res)
         except Exception as e:
-            messagebox.showerror("Erreur", f"Erreur dans le pricing : {e}")
+            messagebox.showerror("Erreur", f"Error in the pricing : {e}")
 
 if __name__ == "__main__":
     app = OptionPricerApp()
